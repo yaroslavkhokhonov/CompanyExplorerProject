@@ -1,0 +1,37 @@
+{% extends "CompanyExplorer/base.html" %}
+{% block title %}Список сотрудников{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="btn-group btn-group-justified">
+            {% for letter in letters %}
+            <a href="/alphabet_employees?letter={{letter}}" class="btn btn-default">
+                {{letter}}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="list-group">
+    {% for employee in employees %}
+    <a href="/employee/{{employee.id}}" class="list-group-item">
+        <div class="row">
+            <div class="col-md-6">
+                <b>{{employee.surname}} {{employee.name}} {{employee.patronymic}}</b>
+            </div>
+            <div class="col-md-6">
+                <p class="text-right">{{employee.department.name}}\{{employee.position}}</p>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+{% endblock %}

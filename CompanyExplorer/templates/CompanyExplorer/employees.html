@@ -1,0 +1,79 @@
+{% extends "CompanyExplorer/base.html" %}
+{% block title %}Данные сотрудника{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<form method="get">
+    <div class="row">
+        <div class="form-group col-md-5">
+            <label for="department_filter">Поиск по отделу:</label>
+            <select id="department_filter" class="form-control" name="department_filter">
+                <option value="0">Любой</option>
+                {% for department in departments %}
+                {% ifequal department.id department_filter %}
+                <option selected value="{{department.id}}">{{department.name}}</option>
+                {% else %}
+                <option value="{{department.id}}">{{department.name}}</option>
+                {% endifequal %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group col-md-5">
+            <label for="is_work">Работают в настоящее время:</label>
+            <select id="is_work" class="form-control" name="is_work_filter">
+                {% ifequal is_work_filter 0 %}
+                <option selected value="0">Не имеет значения</option>
+                {% else %}
+                <option value="0">Не имеет значения</option>
+                {% endifequal %}
+
+                {% ifequal is_work_filter 1 %}
+                <option selected value="1">Работает в компании</option>
+                {% else %}
+                <option value="1">Работает в компании</option>
+                {% endifequal %}
+
+                {% ifequal is_work_filter 2 %}
+                <option selected value="2">Не работает в компании</option>
+                {% else %}
+                <option value="2">Не работает в компании</option>
+                {% endifequal %}
+            </select>
+        </div>
+        <div class="form-group col-md-2">
+            <!--TODO убрать костыль-->
+            <label>&nbsp;</label>
+            <button class="btn btn-default" type="submit">Поиск</button>
+        </div>
+    </div>
+</form>
+
+<div class="list-group">
+    {% for employee in employees %}
+    <a href="/employee/{{employee.id}}" class="list-group-item">
+        <div class="row">
+            <div class="col-md-6">
+                <b>{{employee.surname}} {{employee.name}} {{employee.patronymic}}</b>
+            </div>
+            <div class="col-md-6">
+                <p class="text-right">{{employee.department.name}}\{{employee.position}}</p>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+<div align="center">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li><a href="/employees?department_filter={{department_filter}}&is_work_filter={{is_work_filter}}&page={{page_obj.previous_page_number}}"><</a></li>
+        {% endif %}
+        <li class="active"><a href="#">{{page_obj.number}}</a></li>
+        {% if page_obj.has_next %}
+        <li><a href="/employees?department_filter={{department_filter}}&is_work_filter={{is_work_filter}}&page={{page_obj.next_page_number}}">></a></li>
+        {% endif %}
+    </ul>
+</div>
+{% endblock %}

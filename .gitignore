@@ -1,0 +1,8 @@
+# Created by .ignore support plugin (hsz.mobi)
+.gitignore
+.idea/
+CompanyExplorer/__pycache__/
+CompanyExplorer/migrations/__pycache__/
+CompanyExplorerProject/__pycache__/
+db.sqlite3
+run_server.py
