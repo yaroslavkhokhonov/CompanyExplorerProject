@@ -64,6 +64,9 @@ class AlphabetEmployeeList(ListView):
         # Определею "эталон" - оптимальное кол-во элементов в одной группе
         group_size = round(len(items) / self.GROUPS_COUNT) or 1
 
+        # Счетчики оставшихся элементов для постоянного перерасчета эталона
+        uncounted_items, uncounted_groups = len(items), self.GROUPS_COUNT
+
         first_char, last_char = 'А', 'Я'
 
         # Кол-во элементов в текущей группе
@@ -89,22 +92,27 @@ class AlphabetEmployeeList(ListView):
                 # Итак, группа больше эталона.
                 # Сейчас есть два пути - добавить в группу элементы последнего символа или нет
                 # Для этого сравниваю отклонения от эталона в обоих случаях
-                if count - group_size < group_size - group:
+                if count - group_size <= group_size - group:
                     # Добавляем группу целиком и обнуляем счетчик
                     key_chars.append(cur_char)
+                    uncounted_items -= count
                     count = 0
                 else:
                     # Добавляем группу без элементов, начинающихся на key_char
                     # Недобавленные элементы остаются в новой группе
                     key_chars.append(key_char)
+                    uncounted_items -= group
                     count -= group
+
+                uncounted_groups -= 1
+                group_size = round(uncounted_items / uncounted_groups)
 
             # Если группа меньше эталона - фиксируем новые ключевые значения и продолжаем цикл
             key_char = cur_char
             group = count
             count += 1
 
-        if group:
+        if group and len(key_chars) < 6:
             # Если в группе остались элементы, то добавляю последнюю группу в результат
             key_chars.append(key_char)
 
