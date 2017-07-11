@@ -56,6 +56,9 @@ class AlphabetEmployeeList(ListView):
     GROUPS_COUNT = 7
 
     def get_groups(self):
+        def glue(a, b):
+            return '-'.join([a, b])
+
         items = super(AlphabetEmployeeList, self).get_queryset()
 
         # Определею "эталон" - оптимальное кол-во элементов в одной группе
@@ -86,7 +89,7 @@ class AlphabetEmployeeList(ListView):
                 # Итак, группа больше эталона.
                 # Сейчас есть два пути - добавить в группу элементы последнего символа или нет
                 # Для этого сравниваю отклонения от эталона в обоих случаях
-                if count - group_size <= group_size - group:
+                if count - group_size < group_size - group:
                     # Добавляем группу целиком и обнуляем счетчик
                     key_chars.append(cur_char)
                     count = 0
@@ -101,21 +104,18 @@ class AlphabetEmployeeList(ListView):
             group = count
             count += 1
 
-        result = []
+        if group:
+            # Если в группе остались элементы, то добавляю последнюю группу в результат
+            key_chars.append(key_char)
 
-        def glue(a, b):
-            return '-'.join([a, b])
+        result = []
 
         # Преобразую список в нужный формат
         for i, char in enumerate(key_chars[:-1]):
             result.append(glue(char, chr(ord(key_chars[i + 1]) - 1)))
 
-        if group:
-            # Если в группе остались элементы, то добавляю последнюю группу в результат
-            result.append(glue(result[-1][-1], last_char))
-        else:
-            # Или же просто расширяю последнюю группу до конца алфавита
-            result[-1] = glue(result[-1][0], last_char)
+        # Расширяю последнюю группу до конца алфавита
+        result.append(glue(key_chars[-1], last_char))
 
         return result
 
@@ -124,7 +124,7 @@ class AlphabetEmployeeList(ListView):
         start, end = self.request.GET.get('letter', '-').split('-')
 
         if start and end:
-            items = filter(lambda x: start <= x.surname[0] <= end, items)
+            items = list(filter(lambda x: start <= x.surname[0] <= end, items))
 
         return items
 
