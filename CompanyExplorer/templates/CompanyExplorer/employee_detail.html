@@ -5,47 +5,57 @@
 {% endblock %}
 
 {% block content %}
-<div class="well">
-    <div class="row">
-        <div class="col-md-2">
-            <img src="http://abnerud.ru/images/tech.png"
-                 class="img-rounded" alt="Avatar" width="65" height="65">
+    <div class="well">
+        <div class="row">
+            <div class="col-md-2">
+                <img src="http://abnerud.ru/images/tech.png"
+                     class="img-rounded" alt="Avatar" width="65" height="65">
+            </div>
+            <div class="col-md-10">
+                <h3 class="text-center">
+                    {{ employee.surname }} {{ employee.name }} {{ employee.patronymic }}
+                </h3>
+            </div>
         </div>
-        <div class="col-md-10">
-            <h3 class="text-center">
-                {{employee.surname}} {{employee.name}} {{employee.patronymic}}
-            </h3>
+        <div class="form-group">
+            <label for="birthday" class="control-label">Дата рождения:</label>
+            <p id="birthday" class="form-control">{{ employee.birthday|date:"d.m.Y" }}</p>
+        </div>
+        <div class="form-group">
+            <label for="email" class="control-label">Электронная почта:</label>
+            <p id="email" class="form-control">
+                {% if employee.email %}
+                    {{ employee.email }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="form-group">
+            <label for="phone" class="control-label">Телефон:</label>
+            <p id="phone" class="form-control">
+                {% if employee.email %}
+                    {{ employee.phone }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="form-group">
+            <label for="position" class="control-label">Должность:</label>
+            <p id="position" class="form-control">{{ employee.position }}</p>
+        </div>
+        <div class="form-group">
+            <label for="department" class="control-label">Отдел:</label>
+            <p id="department" class="form-control">{{ employee.department.name }}</p>
+        </div>
+        <div class="form-group">
+            <label for="date" class="control-label">Период работы:</label>
+            <p id="date" class="form-control">
+                {% if employee.start_date %}
+                    с {{ employee.start_date|date:"d.m.Y" }} по
+                    {% if employee.end_date %} {{ employee.end_date|date:"d.m.Y" }}
+                    {% else %} Настоящее время
+                    {% endif %}
+                {% endif %}
+            </p>
         </div>
     </div>
-    <div class="form-group">
-        <label for="birthday" class="control-label">Дата рождения:</label>
-        <p id="birthday" class="form-control">{{employee.birthday|date:"d.m.Y"}}</p>
-    </div>
-    <div class="form-group">
-        <label for="email" class="control-label">Электронная почта:</label>
-        <p id="email" class="form-control">{{employee.email}}</p>
-    </div>
-    <div class="form-group">
-        <label for="phone" class="control-label">Телефон:</label>
-        <p id="phone" class="form-control">{{employee.phone}}</p>
-    </div>
-    <div class="form-group">
-        <label for="position" class="control-label">Должность:</label>
-        <p id="position" class="form-control">{{employee.position}}</p>
-    </div>
-    <div class="form-group">
-        <label for="department" class="control-label">Отдел:</label>
-        <p id="department" class="form-control">{{employee.department.name}}</p>
-    </div>
-    <div class="form-group">
-        <label for="date" class="control-label">Период работы:</label>
-        <p id="date" class="form-control">
-            с {{employee.start_date|date:"d.m.Y"}} по
-            {% if employee.end_date %} {{ employee.end_date|date:"d.m.Y" }}
-            {% else %} 'Настоящее время'
-            {% endif %}
-        </p>
-    </div>
-</div>
 
 {% endblock %}
