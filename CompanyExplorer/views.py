@@ -1,3 +1,5 @@
+from django.db.models import Count
+from django.db.models.functions import Substr, Upper
 from django.views.generic import DetailView, ListView, TemplateView
 
 from .models import Department, Employee
@@ -56,83 +58,59 @@ class AlphabetEmployeeList(ListView):
     GROUPS_COUNT = 7
 
     def get_groups(self):
-        def glue(a, b):
-            return '-'.join([a, b])
+        query = super(AlphabetEmployeeList, self).get_queryset()
 
-        items = super(AlphabetEmployeeList, self).get_queryset()
+        # Счетчики оставшихся элементов и групп для постоянного перерасчета эталона
+        left_items, left_groups = query.count(), self.GROUPS_COUNT
+
+        query = query \
+            .annotate(letter=Upper(Substr('surname', 1, 1))) \
+            .values('letter') \
+            .annotate(count=Count('id')) \
+            .order_by('letter')
 
         # Определею "эталон" - оптимальное кол-во элементов в одной группе
-        group_size = round(len(items) / self.GROUPS_COUNT) or 1
-
-        # Счетчики оставшихся элементов для постоянного перерасчета эталона
-        uncounted_items, uncounted_groups = len(items), self.GROUPS_COUNT
+        group_size = round(left_items / left_groups) or 1
 
         first_char, last_char = 'А', 'Я'
 
-        # Кол-во элементов в текущей группе
-        count = 0
+        # Создаю текущую группу из первого символа
+        group = {
+            'letter': first_char,
+            'count': 0
+        }
 
-        # group - количество элементов в текущей группе без символа key_char
-        group, key_char = 0, first_char
-
-        # Список символов, каждый их которых является началом новой группы
-        # Например, список [A, Д] означает группировку [А-В, Д-Я]
-        key_chars = [first_char]
-
-        for item in items:
-            cur_char = item.surname[0].upper()
-
-            # Проходим по списку и наращиваем текущую группу, пока символы повторяются
-            if key_char == cur_char:
-                count += 1
-                continue
-
-            # Когда символ не совпадает с предыдущим, проверяем размер группы
-            if count >= group_size:
-                # Итак, группа больше эталона.
-                # Сейчас есть два пути - добавить в группу элементы последнего символа или нет
-                # Для этого сравниваю отклонения от эталона в обоих случаях
-                if count - group_size <= group_size - group:
-                    # Добавляем группу целиком и обнуляем счетчик
-                    key_chars.append(cur_char)
-                    uncounted_items -= count
-                    count = 0
-                else:
-                    # Добавляем группу без элементов, начинающихся на key_char
-                    # Недобавленные элементы остаются в новой группе
-                    key_chars.append(key_char)
-                    uncounted_items -= group
-                    count -= group
-
-                uncounted_groups -= 1
-                group_size = round(uncounted_items / uncounted_groups)
-
-            # Если группа меньше эталона - фиксируем новые ключевые значения и продолжаем цикл
-            key_char = cur_char
-            group = count
-            count += 1
-
-        if group and len(key_chars) < 6:
-            # Если в группе остались элементы, то добавляю последнюю группу в результат
-            key_chars.append(key_char)
-
+        # Результат - список групп в виде [А-В, Д-Я]
         result = []
 
-        # Преобразую список в нужный формат
-        for i, char in enumerate(key_chars[:-1]):
-            result.append(glue(char, chr(ord(key_chars[i + 1]) - 1)))
+        for item in query:
+            # Если кол-во элементов после добавления станет ближе к эталонному числу, то увеличиваем группу
+            if abs(group_size - group['count'] - item['count']) <= abs(group_size - group['count']):
+                group['count'] += item['count']
+                continue
 
-        # Расширяю последнюю группу до конца алфавита
-        result.append(glue(key_chars[-1], last_char))
+            # Последнюю группу завершаем последней буквой алфавита вне цикла
+            if left_groups == 1:
+                break
+
+            # Добавляем группу в результат
+            result.append('-'.join([group['letter'], chr(ord(item['letter']) - 1)]))
+            left_items -= group['count']
+            left_groups -= 1
+            group_size = round(left_items / left_groups)
+            group = item
+
+        if left_groups == 1 and group['count']:
+            result.append('-'.join([group['letter'], last_char]))
 
         return result
 
     def get_queryset(self):
         items = super(AlphabetEmployeeList, self).get_queryset()
-        start, end = self.request.GET.get('letter', '-').split('-')
+        letters = self.request.GET.get('letter', '').lower()
 
-        if start and end:
-            items = list(filter(lambda x: start <= x.surname[0] <= end, items))
+        if letters:
+            items = items.filter(surname__iregex=r'^[{}]'.format(letters))
 
         return items
 
