@@ -107,10 +107,13 @@ class AlphabetEmployeeList(ListView):
 
     def get_queryset(self):
         items = super(AlphabetEmployeeList, self).get_queryset()
-        letters = self.request.GET.get('letter', '').lower()
+        start, end = self.request.GET.get('letter', '-').upper().split('-')
 
-        if letters:
-            items = items.filter(surname__iregex=r'^[{}]'.format(letters))
+        if start and end:
+            items = items \
+                .annotate(letter=Upper(Substr('surname', 1, 1))) \
+                .filter(letter__range=(start, end))\
+                .all()
 
         return items
 
